@@ -11,6 +11,11 @@ var path            = require('path'),
 app.use(bodyparser.json({ limit: '50mb', parameterLimit: 100000}));
 app.use(bodyparser.urlencoded({ extended: false, limit: '50mb', parameterLimit: 100000 }));
 
+app.post('/omg', function(req, res){
+    jf.writeFileSync('./lad.json', req.body);
+    res.send('success');
+});
+
 app.use("/", express.static(path.resolve(__dirname, "app")));
 app.use("/", function(req, res, next) {
   res.send(404);
