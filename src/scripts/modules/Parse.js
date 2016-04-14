@@ -1,6 +1,7 @@
 
 var Q       = require('q'),
-    Vec     = require('./Vec');
+    Vec     = require('./Vec'),
+    Colour  = require('./Colour');
 
 module.exports = (function() {
 
@@ -20,19 +21,25 @@ module.exports = (function() {
         greens = [],
         alphas = [],
         lads = [],
+        colours = [],
 
-        density = 12,
+        density = 8,
         scale = 1,
         c = 0,
         momentum = 100;
 
-    function buildImage(d) {
+    function rgb2hex(r, g, b) {
+        return ((1 << 24) + (r << 16) + (g << 8) + b);
+        // return ((1*255 << 24) + (r*255 << 16) + b*255);
+    };
 
+    function buildImage(d) {
+        console.log(d.width, d.height);
         var p = 0;
 
         // x & y and eventual dimenions
-        for ( var y = 0, yl = d.width; y < yl; y+=density ) {
-            for ( var x = 0, xl = d.height; x < xl; x+=density ) {
+        for ( var y = 0, yl = d.height; y < yl; y+=density ) {
+            for ( var x = 0, xl = d.width; x < xl; x+=density ) {
 
                 // Add colours to their arrays
                 reds[c] = d.data[p];
@@ -41,7 +48,13 @@ module.exports = (function() {
                 alphas[c] = d.data[p+3];
 
                 // add positions
-                if ( reds[c] === 0 ) {
+                if ( reds[c] !== 255 ) {
+                    // var col = new Colour.RGB(reds[c], greens[c], blues[c]);
+                    // var col = [reds[c], greens[c], blues[c]]
+                    // console.log(col);
+                    // colours.push(Colour.RGBtoHEX(col));
+                    // colours.push('rgba(' + reds[c] + ',' + greens[c] + ',' + blues[c] + ', 1)');
+                    // colours.push(rgb2hex(reds[c], greens[c], blues[c]));
                     lads.push(((config.width / 2)-(d.width/2))+x);
                     lads.push(((config.height / 2)-(d.height/2))+y);
                 }
@@ -51,7 +64,10 @@ module.exports = (function() {
             }
             p = (y * d.width) * 4;
         }
-        return lads;
+        return {
+            lads: lads,
+            colours: colours
+        };
     }
 
     api.build = function (src) {

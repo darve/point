@@ -7,10 +7,10 @@ var
     Utils   = require('./modules/Utils'),
     gfx     = require('./modules/Graphics'),
     Lad     = require('./modules/Lad'),
-    // Parse   = require('./modules/Parse'),
+    Parse   = require('./modules/Parse'),
     PIXI    = require('pixi'),
-    $       = require('jquery'),
-    data    = require('./data/lowest');
+    $       = require('jquery');
+    // data    = require('./data/lowest');
 
 
 (function(win, doc, c) {
@@ -20,8 +20,8 @@ var
         w = win.innerWidth,
         h = win.innerHeight,
         ev = {
-            pageX: -1000,
-            pageY: -1000
+            pageX: 0.1,
+            pageY: 0.1
         },
 
         a = new Vec(0, 0),
@@ -29,6 +29,7 @@ var
 
         framecount = 1,
         index = 0,
+        colourindex = 0,
 
         // These are all used for the main rendering loop
         now,
@@ -36,13 +37,11 @@ var
         interval = 1000/60,
         delta,
 
-        lads = [],
-        layer = new PIXI.Container();
+        data = [],
+        colours = [],
 
-        layer.position.x = 0;
-        layer.position.y = 0;
-        layer.width = window.innerWidth;
-        layer.height = window.innerHeight;
+        lads = [],
+        layers = {};
 
     function ColorLuminance(hex, lum) {
 
@@ -62,6 +61,15 @@ var
         }
 
         return rgb;
+    }
+
+    function newLayer(colour) {
+        layers[colour] = new PIXI.Container();
+        layers[colour].position.x = 0;
+        layers[colour].position.y = 0;
+        layers[colour].width = window.innerWidth;
+        layers[colour].height = window.innerHeight;
+        stage.addChild(layers[colour]);
     }
 
     function render() {
@@ -88,38 +96,42 @@ var
             if ( index < (data.length) ) addLad();
             if ( index < (data.length) ) addLad();
             if ( index < (data.length) ) addLad();
-
+            // console.log(ev.pageX);
             lads.forEach(function(lad, i) {
 
                 lad.tick(ev.pageX, ev.pageY);
 
-                if ( framecount % 30 === 0 && framecount > 160 ) {
-                    var px = parseInt(lad.sprite.position.x, 10),
-                        py = parseInt(lad.sprite.position.y, 10),
-                        xlad = lad.sprite.position.x + M.rand(-5, 5),
-                        ylad = lad.sprite.position.y + M.rand(-5, 5);
+                if (!lad.awake()) {
 
-                    lad.queue('position', {
-                        speed: 60 + (Math.round(i / 20)),
-                        easing: 'easeInBack',
-                        end: {
-                            pos: {
-                                x: xlad,
-                                y: ylad
-                            }
-                        }
-                    });
-                    lad.queue('position', {
-                        speed: 60 + (Math.round(i / 20)),
-                        easing: 'easeInBack',
-                        end: {
-                            pos: {
-                                x: px,
-                                y: py
-                            }
-                        }
-                    });
                 }
+
+                // if ( framecount % 30 === 0 && framecount > 160 ) {
+                //     var px = parseInt(lad.sprite.position.x, 10),
+                //         py = parseInt(lad.sprite.position.y, 10),
+                //         xlad = lad.sprite.position.x + M.rand(-5, 5),
+                //         ylad = lad.sprite.position.y + M.rand(-5, 5);
+
+                //     lad.queue('position', {
+                //         speed: 60 + (Math.round(i / 20)),
+                //         easing: 'easeInBack',
+                //         end: {
+                //             pos: {
+                //                 x: xlad,
+                //                 y: ylad
+                //             }
+                //         }
+                //     });
+                //     lad.queue('position', {
+                //         speed: 60 + (Math.round(i / 20)),
+                //         easing: 'easeInBack',
+                //         end: {
+                //             pos: {
+                //                 x: px,
+                //                 y: py
+                //             }
+                //         }
+                //     });
+                // }
             });
 
             renderer.render(stage);
@@ -127,6 +139,9 @@ var
     }
 
     function addLad() {
+        // var s = Math.floor(Math.random() * 8) + 10;
+        var s = 16;
+
         var lad = new Lad({
             sprite: new PIXI.Sprite.fromImage('/assets/img/circle-white.png'),
             name: 'lad',
@@ -135,24 +150,32 @@ var
             initial: {
                 pos: new Vec(w/2, h/2),
                 // pos: new Vec(M.rand(0, w), M.rand(0, h)),
-                width: 32, height: 32,
+                width: s, height: s,
                 rotation: 0,
                 alpha: 1
             },
             original: {
                 pos: new Vec(parseInt(data[index], 10)+0.1, parseInt(data[index+1], 10)+0.1),
                 // width: Math.floor(Math.random() * 8) + 32, height: Math.floor(Math.random() * 8) + 32
-                width: 32, height: 32,
+                width: s, height: s,
                 rotation: 1,
                 alpha: Math.random()
             }
         });
+
         index += 2;
-        // lad.sprite.tint = gfx.randomColour();
-        lad.sprite.tint = 0x000000;
+
+        lad.sprite.tint = colours[colourindex];
         lads.push(lad);
-        layer.addChild(lad.sprite);
+
+        if ( !(colours[colourindex] in layers) ) {
+            newLayer(colours[colourindex]);
+        }
+
+        layers[colours[colourindex]].addChild(lad.sprite);
+
         lad.home('easeOutElastic', 60 + (Math.round(index / 20)));
+        colourindex++;
     }
 
     function init() {
@@ -199,10 +222,13 @@ var
         //     });
         // }, 1000);
 
-        stage.addChild(layer);
-
         // Start the rendering loop wahey oh yeah
-        render();
+        Parse.build('/assets/img/x.png').then(function(d) {
+            data = d.lads;
+            colours = d.colours;
+            render();
+        });
+
     }
 
     $(init);

@@ -31,6 +31,7 @@ var Lad = function(opts) {
     _.reboot.width = _.initial.width;
     _.reboot.height = _.initial.height;
     _.reboot.alpha = _.initial.alpha;
+    _.dave = new Vec(0, 0);
 
     _.transitions = {
         position: [],
@@ -417,15 +418,31 @@ Lad.prototype.calcangle = function() {
     // return v.minusNew( this.pos ).normalise();
 };
 
+Lad.prototype.awake = function() {
+    var x = false;
+    this.transitions.forEach(function(v, i) {
+        if (this.length) x = true;
+    });
+    return x;
+};
+
 /**
  * Process the transitions for this Lad
  */
-Lad.prototype.tick = function() {
+Lad.prototype.tick = function(ev) {
+
     for ( var type in this.transitions ) {
         if ( this.transitions[type].length ) {
             this['calc' + type](this.transitions[type][0]);
         }
     }
+
+
+    // this.dave.x = ev.pageX;
+    // this.dave.y = ev.pageY;
+
+    // this.sprite.width = this.reboot.width + (this.pos.minusNew(this.dave).magnitude());
+    // this.sprite.height = this.reboot.height + (this.pos.minusNew(this.dave).magnitude());
 };
 
 module.exports = Lad;

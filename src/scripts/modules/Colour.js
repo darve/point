@@ -195,7 +195,7 @@ module.exports = (function() {
     }
 
     function RGBtoHEX(c) {
-        return '#' + componentToHex(c.r) + componentToHex(c.gg) + componentToHex(c.b);
+        return '#' + componentToHex(c.r) + componentToHex(c.g) + componentToHex(c.b);
     }
 
     return {
